@@ -1,0 +1,7 @@
+DataLoader: Done
+AOIProcessor: Done
+AlertProcessor: Done
+InterceptAssociator: Running
+DataMiner: Not run
+GeoMiner: Not run
+End
