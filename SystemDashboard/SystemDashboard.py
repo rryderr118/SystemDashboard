@@ -65,10 +65,10 @@ class Dashboard:
         sitesX = []
         sitesY = []
         for row in results:
-            if row[2] == "DATAMINER":
+            if row[2] == "DM_RESIDUE_MINER":
                 modesX.append(row[0])
                 modesY.append(row[1])
-            if row[2] == "GEOMINER":
+            if row[2] == "GEO_MINER":
                 sitesX.append(row[0])
                 sitesY.append(row[1])
                 
