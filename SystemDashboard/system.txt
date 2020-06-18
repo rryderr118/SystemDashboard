@@ -1,7 +1,7 @@
-DataLoader: Done
-AOIProcessor: Done
-AlertProcessor: Done
-InterceptAssociator: Running
-DataMiner: Not run
-GeoMiner: Not run
+DataLoader: Last completed 10/10/2020
+AOIProcessor: Last completed 10/10/2020
+AlertProcessor: Last completed 10/10/2020
+InterceptAssociator: Last completed 10/9/2020
+DataMiner: Last completed 10/9/2020
+GeoMiner: Last completed 10/9/2020
 End
