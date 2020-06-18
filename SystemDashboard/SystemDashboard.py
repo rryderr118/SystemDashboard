@@ -5,6 +5,7 @@ Created on Apr 14, 2020
 '''
 import tkinter as tk
 import pandas as pd
+import psycopg2
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
@@ -54,50 +55,22 @@ class Dashboard:
         self.loadData(file_path, dataType, columnNum, startDate, endDate)
         
     def loadData(self, filePath, startDate, endDate):
-        xl = pd.ExcelFile(filePath)
-        dfs = {sheet: xl.parse(sheet) for sheet in xl.sheet_names} 
+        conn = psycopg2.connect(user='user', password='pass', host='127.0.0.1', port='1234', database='db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT END_DATE, NUM_NEW_INTS, COMMENTS from VIPR_DELTA_STATS")
+        results = cursor.fetchall()
+        
         modesX = []
         modesY = []
         sitesX = []
         sitesY = []
-        
-        #Add all days to X between start date and end date
-        appendAllDates = False
-        if startDate != None and endDate != None:
-            delta = endDate - startDate
-            for i in range(delta.days + 1):
-                day = startDate + timedelta(days=i)
-                modesX.append(day)
-                sitesX.append(day)
-        else:
-            appendAllDates = True
-            
-        if appendAllDates:
-            for i in range(len(dfs['Sheet1']['COMMENTS'])):
-                comment = dfs['Sheet1']['COMMENTS'][i]
-                date = dfs['Sheet1']['END_DATE'][i]
-                if comment == 'DATAMINER':
-                    modesY.append(dfs['Sheet1']['NUM_NEW_INTS'][i])
-                    modesX.append(date)
-                if comment == 'GEOMINER':
-                    sitesY.append(dfs['Sheet1']['NUM_NEW_INTS'][i])
-                    sitesX.append(date)
-        else:
-            #Add all days to X between start date and end 
-            delta = endDate - startDate
-            for i in range(delta.days + 1):
-                day = startDate + timedelta(days=i)
-                modesX.append(day)
-                sitesX.append(day)
-            for i in range(len(modesX)):
-                for j in range(len(dfs['Sheet1']['date'])):
-                    date = dfs['Sheet1']['END_DATE'][j]
-                    if date == modesX[i]:
-                        comment = dfs['Sheet1']['COMMENTS'][i]
-                        if comment == 'DATAMINER':
-                            modesY.append(dfs['Sheet1']['NUM_NEW_INTS'][j])
-                        if comment == 'GEOMINER':
-                            sitesY.append(dfs['Sheet1']['NUM_NEW_INTS'][j])
+        for row in results:
+            if row[2] == "DATAMINER":
+                modesX.append(row[0])
+                modesY.append(row[1])
+            if row[2] == "GEOMINER":
+                sitesX.append(row[0])
+                sitesY.append(row[1])
                 
         fig, ax = plt.subplots(figsize=(8, 6))
         plt.yticks(range(0,max(modesY)+1))
@@ -118,6 +91,12 @@ class Dashboard:
         canvas.get_tk_widget().grid(row=1, column=1, rowspan=7, sticky='s')
         
         fig, ax = plt.subplots(figsize=(8, 6))
+        if startDate != None and endDate != None:
+            xticks = []
+            #set xticks to be every day between start day and end day
+            for i in range(delta.days + 1):
+                xticks.append(startDate + timedelta(days=i))
+            plt.xticks(xticks)
         plt.yticks(range(0,max(sitesY)+1))
         ax.xaxis.set_major_locator(mdates.WeekdayLocator(byweekday=0))
         ax.xaxis.set_minor_locator(mdates.DayLocator())
@@ -134,6 +113,8 @@ class Dashboard:
         canvas = FigureCanvasTkAgg(fig, master=self.root)
         canvas.draw()
         canvas.get_tk_widget().grid(row=1, column=2, rowspan=7, sticky='s')
+        if conn != None:
+            conn.close()
         
     def loadStatusData(self):
         f = open(os.path.dirname(os.path.realpath(__file__)) + "\system.txt", "r")
