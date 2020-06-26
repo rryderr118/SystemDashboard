@@ -20,7 +20,7 @@ class Dashboard:
         self.root = tk.Tk()
         self.frame = tk.Frame(self.root)
         self.createGraphic()
-        self.loadData(os.path.dirname(os.path.realpath(__file__)) + '\VIPR_DELTA_STATS.xlsx', None, None)
+        self.loadData(os.path.dirname(os.path.realpath(__file__)) + '\VIPR_DELTA_STATS.xlsx', os.path.dirname(os.path.realpath(__file__)) + '\config.txt', None, None)
         self.loadStatusData()
         self.root.configure(background = 'white')
         self.frame.config(background = 'white')
@@ -107,8 +107,15 @@ class Dashboard:
         if yRange > 300 and yRange <= 400:
             return 40
         
-    def loadData(self, filePath, startDate, endDate):
-        conn = psycopg2.connect(user='postgres', password='abc123', host='127.0.0.1', port='5432', database='test')
+    def loadData(self, filePath, configPath, startDate, endDate):
+        f = open(configPath, 'r')
+        user = f.readline().split('=')[1].strip()
+        password = f.readline().split('=')[1].strip()
+        host = f.readline().split('=')[1].strip()
+        port = f.readline().split('=')[1].strip()
+        database = f.readline().split('=')[1]
+        print(user,password,host,port,database)
+        conn = psycopg2.connect(user=user, password=password, host=host, port=port, database=database)
         cursor = conn.cursor()
         cursor.execute('SELECT END_DATE, NUM_NEW_INTS, COMMENTS from VIPR_DELTA_STATS')
         results = cursor.fetchall()
