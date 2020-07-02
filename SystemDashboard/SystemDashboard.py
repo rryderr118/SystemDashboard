@@ -5,6 +5,7 @@ Created on Apr 14, 2020
 import tkinter as tk
 import pandas as pd
 import psycopg2
+import cx_Oracle  
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
@@ -13,6 +14,7 @@ from datetime import datetime, timedelta
 from tkcalendar import DateEntry
 from tkinter import ttk
 import os
+from _sqlite3 import connect
 
 class Dashboard:
     
@@ -20,7 +22,7 @@ class Dashboard:
         self.root = tk.Tk()
         self.frame = tk.Frame(self.root)
         self.createGraphic()
-        self.loadData(os.path.dirname(os.path.realpath(__file__)) + '\VIPR_DELTA_STATS.xlsx', os.path.dirname(os.path.realpath(__file__)) + '\config.txt', None, None)
+        self.loadData(os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + '\config.txt', None, None)
         self.loadStatusData()
         self.root.configure(background = 'white')
         self.frame.config(background = 'white')
@@ -107,19 +109,24 @@ class Dashboard:
         if yRange > 300 and yRange <= 400:
             return 40
         
-    def loadData(self, filePath, configPath, startDate, endDate):
+    def loadData(self, configPath, startDate, endDate):
         f = open(configPath, 'r')
+        
+        dbType = f.readline().split('=')[1].strip()
         user = f.readline().split('=')[1].strip()
         password = f.readline().split('=')[1].strip()
         host = f.readline().split('=')[1].strip()
         port = f.readline().split('=')[1].strip()
         database = f.readline().split('=')[1]
-        print(user,password,host,port,database)
-        conn = psycopg2.connect(user=user, password=password, host=host, port=port, database=database)
+        conn = None
+        if dbType == 'oracle':
+            dsn_tns = cx_Oracle.makedsn('localhost', 1521, 'xe')
+            conn = cx_Oracle.connect(user=user, password=password, dsn=dsn_tns)
+        elif dbType == 'postgres':
+            conn = psycopg2.connect(user=user, password=password, host=host, port=port, database=database)
         cursor = conn.cursor()
         cursor.execute('SELECT END_DATE, NUM_NEW_INTS, COMMENTS from VIPR_DELTA_STATS')
         results = cursor.fetchall()
-        
         self.modesX = []
         self.modesY = []
         self.sitesX = []
